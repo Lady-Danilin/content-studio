@@ -15,6 +15,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 
+def plural(n: int, singular: str, plural_: str) -> str:
+    return f"{n} {singular if n == 1 else plural_}"
+
+
 def emitir(contexto: str) -> None:
     print(json.dumps({
         "hookSpecificOutput": {
@@ -46,7 +50,7 @@ def main() -> int:
     sin_cal = cob.get("marcas_sin_calendario") or []
     if sin_cal:
         avisos.append(
-            f"{len(sin_cal)} de {cob['marcas']} marcas no tienen calendario "
+            f"{len(sin_cal)} de {cob['marcas']} marcas sin calendario "
             f"({', '.join(sin_cal[:5])}{'…' if len(sin_cal) > 5 else ''}). "
             "Sus assets van a staging SIN id. No acuñes ids de pieza."
         )
@@ -58,7 +62,8 @@ def main() -> int:
             sin_permisos.append(slug)
     if sin_permisos:
         avisos.append(
-            f"{len(sin_permisos)} marcas tienen permisos editoriales sin declarar "
+            f"{plural(len(sin_permisos), 'marca tiene', 'marcas tienen')} "
+            "los permisos editoriales sin declarar "
             f"({', '.join(sin_permisos[:5])}{'…' if len(sin_permisos) > 5 else ''}). "
             "La ausencia bloquea y pregunta: no se hereda de otra marca del cluster."
         )

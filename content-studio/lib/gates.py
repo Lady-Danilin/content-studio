@@ -437,7 +437,7 @@ def just_in_time(fila_grilla: dict, ahora: datetime | None = None,
                     f"este slot es de {horas} h. Lo que se produzca hoy llega "
                     "vencido."
                 ),
-                "accion": f"Reprogramar la producción para dentro de la ventana.",
+                "accion": "Reprogramar la producción para dentro de la ventana.",
             },
         )
     return _r("just_in_time", OK, [])

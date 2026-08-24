@@ -52,7 +52,6 @@ def armar(
     pieza_id: str | None = None,
     manifiestos: list[dict] | None = None,
     veredicto: dict | None = None,
-    fuentes: list[str] | None = None,
 ) -> dict:
     """Escribe el paquete y devuelve qué quedó adentro.
 
@@ -75,7 +74,19 @@ def armar(
     )
     (carpeta / "copy.md").write_text(encabezado + copy.strip() + "\n", encoding="utf-8")
 
-    mf.escribir(carpeta, manifiestos or [])
+    # Completar la huella de cada asset contra el archivo que quedó en disco.
+    # El manifiesto suele armarse antes de que el archivo exista —quien
+    # genera describe lo que va a pedir— así que el sha256 sólo se puede
+    # calcular acá, cuando ya está.
+    completos = []
+    for entrada in manifiestos or []:
+        e = dict(entrada)
+        destino_asset = carpeta / "assets" / e.get("archivo", "")
+        if e.get("sha256") is None and destino_asset.is_file():
+            e["sha256"] = mf.sha256(destino_asset)
+        completos.append(e)
+
+    mf.escribir(carpeta, completos)
     (carpeta / "pendientes.md").write_text(
         _pendientes(m, veredicto or {}, pieza_id), encoding="utf-8"
     )
@@ -85,7 +96,7 @@ def armar(
         "pieza_id": pieza_id,
         "staging": pieza_id is None,
         "incompleta": incompleta,
-        "assets": len(manifiestos or []),
+        "assets": len(completos),
         "pendientes": len((veredicto or {}).get("avisos", [])),
         "archivos": ["copy.md", "manifiesto.json", "pendientes.md", "work/", "assets/"],
         "verificacion": inventario.verificar(carpeta),

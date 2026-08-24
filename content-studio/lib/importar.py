@@ -77,8 +77,14 @@ def normalizar_marca(slug: str, cruda: dict) -> dict:
         "guiones": cruda.get("guiones") or [],
         "meses": cruda.get("meses") or [],
         "conversion": cruda.get("conversion") or {},
+        # El esquema declara los tres campos aunque estén vacíos: si sólo
+        # se listaran en `faltan`, quien cargue la paleta después no tendría
+        # dónde ponerla, y `campos.borrador` no la encontraría nunca.
         "identidad_visual": cruda.get("identidad_visual") or {
             "disponible": False,
+            "logo": None,
+            "paleta": None,
+            "tipografia": None,
             "faltan": ["logo", "paleta", "tipografia"],
         },
         "inventario": cruda.get("inventario") or [],

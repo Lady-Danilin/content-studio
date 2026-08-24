@@ -524,9 +524,31 @@ def handle(msg: dict) -> dict | None:
         if fn is None:
             return _text(rid, f"La herramienta {name!r} no existe. "
                               f"Disponibles: {', '.join(sorted(HANDLERS))}", is_error=True)
+        args = params.get("arguments") or {}
+
+        # Validar los requeridos contra el propio esquema de la herramienta.
+        # Va acá y no en cada handler: un KeyError pelado no le dice a nadie
+        # qué falta, y el resto del plugin se toma el trabajo de que cada
+        # error diga qué hacer.
+        esquema = next((t for t in TOOLS if t["name"] == name), {})
+        faltan = [
+            c for c in esquema.get("inputSchema", {}).get("required", [])
+            if args.get(c) in (None, "")
+        ]
+        if faltan:
+            props = esquema.get("inputSchema", {}).get("properties", {})
+            detalle = "\n".join(
+                f"  · {c}: {props.get(c, {}).get('description', 'sin descripción')}"
+                for c in faltan
+            )
+            return _text(
+                rid,
+                f"A {name} le falta: {', '.join(faltan)}.\n{detalle}",
+                is_error=True,
+            )
+
         try:
-            return _text(rid, json.dumps(fn(params.get("arguments") or {}),
-                                         indent=2, ensure_ascii=False))
+            return _text(rid, json.dumps(fn(args), indent=2, ensure_ascii=False))
         except GateError as e:
             # Un gate no es un error del programa: es el programa haciendo su
             # trabajo. Devolvemos el camino correcto y prohibimos el rodeo.

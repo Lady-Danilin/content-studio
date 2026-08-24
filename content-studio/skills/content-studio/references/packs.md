@@ -44,8 +44,9 @@ core necesita y una fuente típica no tiene:
   pregunta**; no se hereda del cluster.
 - `conversion` — `canal`, `palabra_clave`, `verificado`. Sin esto todo CTA
   cae al vacío y la métrica no mide nada.
-- `identidad_visual` — `disponible`, `faltan`. Sin esto las piezas salen
-  marcadas `incompleta`, que es lo correcto.
+- `identidad_visual` — `disponible`, `logo`, `paleta`, `tipografia`,
+  `faltan`. La paleta va en su campo y `disponible: true`: el prompt la usa
+  sólo si están las dos. Sin esto las piezas salen `incompleta`.
 - `prohibido` — las frases vedadas. Ojo: suelen estar escritas en la propia
   ficha de la marca *como prohibición*, y un generador que lee esa ficha
   las ve como copy disponible.
