@@ -1,0 +1,19 @@
+{
+  "name": "content-studio",
+  "owner": { "name": "Lady-Danilin" },
+  "metadata": {
+    "description": "Producción de contenido de marca para agencias, con los frenos puestos",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "content-studio",
+      "source": "./content-studio",
+      "description": "Del plan de contenidos a la pieza entregable. Sabe qué NO generar —una obra, un local, una persona, un dato que nadie validó— y devuelve un plan de rodaje en vez de un asset falso. Core genérico; la cartera de cada agencia vive en un pack fuera del repo.",
+      "author": { "name": "Lady-Danilin" },
+      "repository": "https://github.com/Lady-Danilin/content-studio",
+      "license": "MIT",
+      "keywords": ["marketing", "contenido", "agencia", "marca", "instagram", "copy", "flow", "mcp"]
+    }
+  ]
+}

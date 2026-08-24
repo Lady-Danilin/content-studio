@@ -1,0 +1,141 @@
+{
+  "nombre": "_ejemplo",
+  "agencia": "Agencia de Ejemplo",
+  "descripcion": "Pack ficticio para probar el core sin datos de nadie. Dos marcas inventadas, elegidas para que se disparen los gates interesantes: una regulada y un par de vecindad peligrosa.",
+  "convenciones": {
+    "id_pieza": "<slug>-<anio>-<mm>-s<semana>-<dia>",
+    "id_guion": "<slug>-guion-<sufijo>"
+  },
+  "marcas": {
+    "ferreteria-ejemplo": {
+      "nombre": "Ferretería Ejemplo",
+      "numero": "01",
+      "rubro": "Materiales de construcción",
+      "ficha": {
+        "objetivo": "Consultas de profesionales y cotizaciones",
+        "frecuencia": "3 publicaciones semanales",
+        "plataforma": "Instagram y Facebook",
+        "metrica": "Cotizaciones pedidas",
+        "tono": "Técnico, directo, sin adjetivos de más",
+        "cluster": "Lead técnico B2B"
+      },
+      "voz": {
+        "tono": "Técnico, directo",
+        "como_suena": "Empieza por el dato y después explica. No usa superlativos.",
+        "como_no_suena": "Nunca en tono de promoción minorista ni con urgencia inventada.",
+        "muletillas": ["Lo que conviene mirar antes de comprar:"]
+      },
+      "permisos": { "trend": "permitido", "humor": "permitido", "crudo": "permitido" },
+      "sector_regulado": false,
+      "grilla": [
+        { "slot": "Lunes", "funcion": "atrae", "que": "Dato técnico breve" },
+        { "slot": "Miércoles", "funcion": "demuestra", "que": "Material en uso", "just_in_time": { "ventana_horas": 48 } },
+        { "slot": "Viernes", "funcion": "convierte", "que": "Carrusel con cierre" }
+      ],
+      "tipos": ["reel", "carrusel", "placa"],
+      "guiones": [
+        {
+          "id": "ferreteria-ejemplo-guion-01",
+          "titulo": "Cómo elegir el espesor",
+          "filas": [
+            { "clave": "Hook (0-3 s)", "valor": "«El espesor no se elige por precio.»" },
+            { "clave": "Desarrollo", "valor": "Tres criterios, uno por plano." },
+            { "clave": "CTA", "valor": "«Comentá MEDIDA y te pasamos la tabla.»" }
+          ]
+        }
+      ],
+      "meses": [
+        {
+          "anio": 2026,
+          "mes": 9,
+          "semanas": [
+            {
+              "numero": 1,
+              "tema": "Elegir bien antes de comprar",
+              "piezas": [
+                { "id": "ferreteria-ejemplo-2026-09-s1-lunes", "dia": "lunes", "etiquetas": [], "que": "Dato técnico breve", "cta": "Comentá MEDIDA" },
+                { "id": "ferreteria-ejemplo-2026-09-s1-miercoles", "dia": "miercoles", "etiquetas": ["crudo"], "que": "Material en uso", "cta": "Escribinos" }
+              ]
+            }
+          ]
+        }
+      ],
+      "conversion": { "canal": "WhatsApp", "palabra_clave": "MEDIDA", "verificado": true },
+      "identidad_visual": { "disponible": true, "faltan": [] },
+      "inventario": ["fotos de depósito 2026-07"],
+      "prohibido": ["el más barato del mercado", "stock ilimitado"],
+      "presets": ["fondo-placa", "despiece-tecnico"],
+      "audio": { "bpm": [100, 115], "instrumentacion": "percusión seca, sin voz" },
+      "validar": ["precio", "stock", "plazo de entrega"],
+      "responsable": "responsable de cuenta",
+      "huecos": []
+    },
+    "centro-ejemplo": {
+      "nombre": "Centro Ejemplo",
+      "numero": "02",
+      "rubro": "Centro de salud",
+      "ficha": {
+        "objetivo": "Turnos agendados",
+        "frecuencia": "2 publicaciones semanales",
+        "plataforma": "Instagram",
+        "metrica": "Turnos",
+        "tono": "Sobrio, prudente",
+        "cluster": "Consulta en salud"
+      },
+      "voz": {
+        "tono": "Sobrio, prudente",
+        "como_suena": "Modaliza siempre: «puede contribuir», «según evaluación».",
+        "como_no_suena": "Nunca promete un resultado ni usa el tono de una promoción.",
+        "muletillas": ["Según evaluación profesional,"]
+      },
+      "permisos": { "trend": "prohibido", "humor": "prohibido" },
+      "sector_regulado": true,
+      "grilla": [
+        { "slot": "Martes", "funcion": "atrae", "que": "Divulgación breve" },
+        { "slot": "Jueves", "funcion": "convierte", "que": "Cómo pedir turno" }
+      ],
+      "tipos": ["placa", "carrusel"],
+      "guiones": [],
+      "meses": [],
+      "conversion": {},
+      "identidad_visual": { "disponible": false, "faltan": ["logo", "paleta", "tipografia"] },
+      "inventario": [],
+      "prohibido": ["resultados garantizados", "sin efectos adversos"],
+      "presets": ["fondo-placa"],
+      "audio": { "bpm": [70, 85], "instrumentacion": "cuerdas suaves, sin percusión" },
+      "validar": ["toda afirmación clínica", "aranceles", "coberturas", "matrícula"],
+      "responsable": "dirección médica",
+      "huecos": ["Sin calendario cargado", "Falta el nombre y matrícula del profesional que firma"]
+    }
+  },
+  "pares_peligrosos": [],
+  "presets": {
+    "fondo-placa": {
+      "titulo": "Fondo de placa",
+      "para_que": "Fondos y texturas para placas de marca. Es el único pipeline que suele compartir toda una cartera: cambia la paleta, no la pieza.",
+      "prompt": "superficie de papel prensado con grano fino, luz lateral suave y pareja, espacio negativo declarado en el tercio superior para tipografía posterior, paleta sobria",
+      "aspecto": "1:1",
+      "medio": "imagen",
+      "boton": "GENERAR FONDO",
+      "marcas": ["ferreteria-ejemplo", "centro-ejemplo"],
+      "controles": [
+        { "etiqueta": "Textura", "tipo": "desplegable", "valores": ["Papel", "Cemento", "Tela", "Madera"], "para_que": "superficie base" },
+        { "etiqueta": "Paleta", "tipo": "texto", "obligatorio": true, "para_que": "colores dominantes separados por coma" }
+      ],
+      "notas": ["El fondo se entrega sin ningún elemento gráfico de marca: el logo se compone después."]
+    },
+    "despiece-tecnico": {
+      "titulo": "Despiece técnico",
+      "para_que": "Cortes y esquemas en línea fina, mudos por diseño. Las capas se rotulan después, en diseño, con la nomenclatura ya validada.",
+      "prompt": "corte técnico esquemático en línea fina uniforme, relleno plano, capas claramente separadas con aire entre ellas, fondo neutro, sin cotas ni rótulos",
+      "aspecto": "4:5",
+      "medio": "imagen",
+      "boton": "GENERAR DESPIECE",
+      "marcas": ["ferreteria-ejemplo"],
+      "controles": [
+        { "etiqueta": "Capas", "tipo": "texto", "obligatorio": true, "para_que": "qué capas mostrar, de afuera hacia adentro" }
+      ],
+      "notas": ["Mudo a propósito: un rótulo mal escrito en una pieza técnica es contenido incorrecto firmado por el cliente."]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "content-studio",
+  "version": "0.1.0",
+  "description": "Producción de contenido de marca para agencias: del plan a la pieza entregable. Sabe qué NO generar —una obra, un local, una persona, un dato sin validar— y devuelve el camino correcto en vez de un asset falso. El core es genérico; la cartera de cada agencia vive en packs/.",
+  "author": { "name": "Lady-Danilin" },
+  "license": "MIT",
+  "keywords": ["marketing", "contenido", "agencia", "marca", "instagram", "flow", "mcp", "packs"],
+  "commands": [
+    "./commands/studio-setup.md",
+    "./commands/studio-importar.md",
+    "./commands/studio-pieza.md",
+    "./commands/studio-huecos.md"
+  ]
+}

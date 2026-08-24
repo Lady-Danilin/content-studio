@@ -1,0 +1,23 @@
+# Credenciales — nunca, bajo ningún nombre
+*cookies*.json
+.flow-token.json
+.env
+.env.*
+
+# Packs reales: datos de negocio de clientes de terceros.
+# Van a ~/.config/content-studio/packs/, fuera de este repo.
+packs/*
+!packs/_ejemplo/
+!packs/README.md
+content-studio/packs/*
+!content-studio/packs/_ejemplo/
+!content-studio/packs/README.md
+
+# Salida de producción
+studio-out/
+flow-out/
+flow-applets/
+
+__pycache__/
+*.pyc
+.DS_Store
