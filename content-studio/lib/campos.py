@@ -24,12 +24,46 @@ import plan
 # Prohibiciones que van en TODO prompt de generación, sin importar la
 # marca. No son estilo: son los gates escritos en el prompt, para que el
 # modelo no tenga que adivinarlos.
+#
+# Van ADELANTE, y eso no es una preferencia de redacción. Los endpoints
+# generativos truncan los prompts largos en silencio: la imagen vuelve, y
+# vuelve bien, así que nada avisa que se cortó la cola. Como lo último que
+# se agrega es lo primero que se pierde, poner las prohibiciones al final
+# significa que la truncación desactiva justo la regla en la que se estaba
+# confiando — y el resultado parece correcto hasta que un día no lo es.
 PROHIBICIONES_BASE = [
     "sin texto, sin números, sin rótulos ni cotas",
     "sin logos ni marcas de agua",
     "sin marcas, modelos, patentes ni packaging de terceros",
     "sin personas identificables",
 ]
+
+# Techo del prompt en Flow, medido: más allá de esto se recorta **en
+# silencio** — la imagen igual vuelve, y bien, así que la pérdida no se ve.
+#
+# Con las prohibiciones adelante, lo que se pierde al truncar es la cola:
+# la situación primero, y después la dirección visual del preset. Es la
+# pérdida barata, y es a propósito. Aun así se mide, porque una pieza que
+# perdió su dirección visual sale genérica sin que nada lo diga.
+TECHO_PROMPT = 2126
+MARGEN_AVISO = 150
+
+
+def medir_prompt(prompt: str) -> dict:
+    """Cuánto mide lo que se va a enviar, contra el techo.
+
+    Medir es la única defensa contra un recorte que no avisa. Es barato y no
+    depende de mirar un contador en pantalla.
+    """
+    largo = len(prompt)
+    return {
+        "largo": largo,
+        "techo": TECHO_PROMPT,
+        "margen": TECHO_PROMPT - largo,
+        "se_trunca": largo > TECHO_PROMPT,
+        "sobra": max(0, largo - TECHO_PROMPT),
+        "al_limite": TECHO_PROMPT - MARGEN_AVISO <= largo <= TECHO_PROMPT,
+    }
 
 
 def borrador(
@@ -50,14 +84,16 @@ def borrador(
     contrato = formatos.resolver(destino) if destino else None
     aspecto = (contrato or {}).get("aspecto") or preset.get("aspecto") or "4:5"
 
-    partes = [preset.get("prompt", "").strip()]
-    if situacion:
-        partes.append(situacion.strip())
+    # Orden deliberado: primero lo que no se puede perder.
+    partes = [", ".join(PROHIBICIONES_BASE)]
     if tiene_iv and iv.get("paleta"):
         partes.append(f"paleta: {iv['paleta']}")
-    partes.append(", ".join(PROHIBICIONES_BASE))
+    partes.append(preset.get("prompt", "").strip())
+    if situacion:
+        partes.append(situacion.strip())
 
     prompt = ". ".join(p for p in partes if p)
+    largo = medir_prompt(prompt)
 
     campos: dict[str, Any] = {
         "marca": m["slug"],
@@ -78,6 +114,21 @@ def borrador(
     }
 
     pendientes = []
+    if largo["se_trunca"]:
+        pendientes.append({
+            "campo": "prompt",
+            "detalle": (
+                f"El prompt mide {largo['largo']} caracteres y el techo de Flow "
+                f"es {TECHO_PROMPT}: se van a perder {largo['sobra']} del final."
+            ),
+            "consecuencia": (
+                "Las prohibiciones van adelante y sobreviven al recorte, así "
+                "que no se pierde el freno; lo que se pierde es la cola: la "
+                "situación y parte de la dirección visual del preset. La "
+                "pieza sale genérica sin que nada lo avise. Acortar la "
+                "situación."
+            ),
+        })
     if not tiene_iv:
         pendientes.append({
             "campo": "paleta",
@@ -101,6 +152,7 @@ def borrador(
 
     return {
         "campos": campos,
+        "largo_prompt": largo,
         "origen": origen,
         "borrador": True,
         "pendientes": pendientes,
@@ -131,13 +183,19 @@ def matriz(m: dict, preset: dict, ejes: dict[str, list]) -> dict:
     for c in combinaciones:
         situacion = ", ".join(f"{k}: {v}" for k, v in c.items())
         b = borrador(m, preset, situacion=situacion)
-        variantes.append({"ejes": c, "prompt": b["campos"]["prompt"]})
+        variantes.append({
+            "ejes": c,
+            "prompt": b["campos"]["prompt"],
+            "medida": b["largo_prompt"],
+        })
 
+    truncan = [v for v in variantes if v["medida"]["se_trunca"]]
     return {
         "marca": m["slug"],
         "preset": preset.get("titulo"),
         "ejes": {k: len(v) for k, v in ejes.items()},
         "variantes": len(variantes),
+        "truncan": len(truncan),
         "lote": variantes,
         "antes_de_lanzar": (
             "Probá con dos o tres primero. Un lote entero que falla en la "

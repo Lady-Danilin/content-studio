@@ -156,6 +156,34 @@ cuando una se agota el backend contesta `FALLO EN GENERACIÓN` y nada más —
 indistinguible de un error transitorio. Sin el desplegable, la reacción
 natural es reintentar, que es justo lo que no hay que hacer.
 
+**Después de crear o editar una applet, corré siempre
+`studio_applet_verificar`.** El agente de Flow recorta bloques al copiarlos y
+reporta el cambio como hecho; el resultado no delata la pérdida, porque las
+imágenes salen bien igual hasta que una no. Es una llamada, no gasta nada, y
+convierte un recorte silencioso en algo que se ve.
+
+## El prompt se recorta a los 2126 caracteres, y no avisa
+
+Es la trampa más cara de Flow. La imagen vuelve igual, y bien, así que nada
+en pantalla dice que se perdió el final.
+
+Acá pesa más que en otros usos por cómo se arma el prompt: las prohibiciones
+—sin texto, sin logos, sin terceros, sin personas identificables— van
+**últimas**, o sea que son lo primero que se cae. Sin ellas el gate reporta
+OK, la pieza vuelve con un rótulo horneado o una cara identificable, y nadie
+se entera hasta que el cliente la ve.
+
+`studio_campos` ya lo mide: si el borrador viene con un pendiente de campo
+`prompt`, el prompt no entra y hay que acortar la situación antes de
+generar. No es un aviso de estilo.
+
+## Los créditos no son el presupuesto de imagen
+
+Medido: corridas que generaron decenas de imágenes informaron costo total 0,
+con los archivos en disco. El contador no acompaña la generación de imagen.
+Sirve para lo que sí descuenta —video— y para saber que la cuenta está viva.
+Leerlo como "lo que va a costar esta tanda" da un número que no significa eso.
+
 ## Referencias
 
 - `references/packs.md` — qué va en el core y qué en el pack, y cómo llenarlo

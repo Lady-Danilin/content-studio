@@ -240,6 +240,46 @@ def descubrir(esperadas: dict[str, str] | None = None) -> dict:
     }
 
 
+def verificar(applet_id: str, clausulas: list[str]) -> dict:
+    """¿La applet que construyó el agente de Flow dice lo que se le pidió?
+
+    **El agente de Flow recorta bloques al copiarlos, y no avisa.** Medido:
+    pidiéndole un bloque de prohibiciones palabra por palabra, copió la
+    primera oración y dejó afuera las cuatro cláusulas siguientes — y reportó
+    el cambio como hecho. Lo peligroso es que el resultado no delata la
+    pérdida: las imágenes salieron bien igual, porque el resto del prompt
+    alcanzaba para esa tanda. El primer caso que no alcance se lleva puesta
+    una pieza de cliente.
+
+    Por eso no se confía en lo que el agente dice que hizo: se baja el código
+    de la applet y se busca cada cláusula adentro. Es una llamada, no cuesta
+    créditos, y convierte un recorte silencioso en algo que se ve.
+
+        verificar(applet_id, ["sin texto", "sin logos", "sin personas"])
+    """
+    d = labs.obtener_applet(applet_id)
+    archivos = d.get("codeFiles") or []
+    codigo = studio.normalizar(
+        "\n".join(f.get("content", "") for f in archivos)
+    )
+    presentes, ausentes = [], []
+    for c in clausulas:
+        (presentes if studio.normalizar(c) in codigo else ausentes).append(c)
+
+    return {
+        "appletId": applet_id,
+        "archivos": [f.get("path") or f.get("name") for f in archivos],
+        "presentes": presentes,
+        "ausentes": ausentes,
+        "ok": not ausentes,
+        "siguiente": (
+            "Volver a pedirle al agente de Flow las cláusulas que faltan, una "
+            "por una, y verificar de nuevo. No alcanza con que diga que las "
+            "puso."
+        ) if ausentes else "La applet dice lo que se le pidió.",
+    }
+
+
 def conversacion(applet_id: str) -> list[dict]:
     """La conversación que construyó una applet.
 

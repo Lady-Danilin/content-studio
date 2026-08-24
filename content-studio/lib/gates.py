@@ -170,18 +170,70 @@ def plan_de_rodaje(peticion: str, hallazgos: list) -> dict:
 
 # Categorías de dato que ninguna agencia publica sin confirmación del
 # responsable de cuenta. La lista es normativa, no estilística.
+# Cada patrón captura el MARCADOR y, cuando lo hay, el DATO que lo sigue.
+#
+# Que el dato entre en el match no es cosmético: la comparación contra la
+# fuente se hace sobre lo que matcheó. Con patrones que sólo capturaban el
+# marcador —«válida hasta», «entrega en»— un copy que decía «válida hasta el
+# 5 de enero» contra una fuente que decía «válida hasta el 30 de septiembre»
+# daba por validado el dato, porque la frase «válida hasta» sí estaba en la
+# fuente. La fecha, que es el dato, no la miraba nadie.
+_COLA = r"[^.,;\n]{0,40}"
+
 PATRONES_DATO = [
-    ("precio", r"\$\s?\d[\d.\s]*|\b\d[\d.]*\s?(pesos|usd|dólares|dolares)\b"),
-    ("cuota", r"\bcuotas?\b|\banticipo\b|\bfinanciad[oa]\b|\bsin inter[eé]s\b"),
-    ("tasa", r"\btasa\b|\btna\b|\bcft\b|\b\d+\s?%\s?(anual|mensual)?\b"),
-    ("plazo", r"\b\d+\s?(d[ií]as|semanas|meses|años|anos)\b|\bentrega en\b|\bplazo de\b"),
-    ("stock", r"\bstock\b|\b\d+\s?(unidades|lotes|cupos|vacantes)\b|\búltim[oa]s?\b|\bultim[oa]s?\b"),
-    ("vencimiento", r"\bhasta el\b|\bválid[ao] hasta\b|\bvalid[ao] hasta\b|\bvence\b"),
-    ("dosis", r"\bdosis\b|\b\d+\s?(kg|g|ml|mg|l|tn)\s?(/|por)\s?(ha|hect|m2|m²)\b"),
-    ("especificacion_tecnica", r"\b\d+\s?(mm|cm|kg/m|mpa|kn|w|kva|rpm)\b|\bnorma\s+[A-Z]"),
-    ("contacto", r"\b\d{2,4}[\s-]?\d{3,4}[\s-]?\d{3,4}\b|\bwhatsapp\b|@[\w.]+\.(com|ar)\b"),
-    ("cobertura_geografica", r"\benv[ií]os? a\b|\bcobertura\b|\ba todo el pa[ií]s\b"),
+    ("precio", rf"\$\s?\d[\d.\s]*|\b\d[\d.]*\s?(?:pesos|usd|dólares|dolares)\b"),
+    ("cuota", rf"\b(?:cuotas?|anticipo|financiad[oa]|sin inter[eé]s)\b{_COLA}"),
+    ("tasa", r"\b(?:tasa|tna|cft)\b[^.,;\n]{0,40}|\b\d+[\d.,]*\s?%\s?(?:anual|mensual)?"),
+    ("plazo", rf"\b\d+\s?(?:d[ií]as|semanas|meses|años|anos)\b|\b(?:entrega en|plazo de){_COLA}"),
+    ("stock", rf"\b\d+\s?(?:unidades|lotes|cupos|vacantes)\b|\b(?:stock|últim[oa]s?|ultim[oa]s?){_COLA}"),
+    ("vencimiento", rf"\b(?:hasta el|válid[ao] hasta|valid[ao] hasta|vence){_COLA}"),
+    ("dosis", rf"\b\d+\s?(?:kg|g|ml|mg|l|tn)\s?(?:/|por)\s?(?:ha|hect|m2|m²)\b|\bdosis{_COLA}"),
+    ("especificacion_tecnica", r"\b\d+[\d.,]*\s?(?:mm|cm|kg/m|mpa|kn|w|kva|rpm)\b|\bnorma\s+[\w-]+"),
+    ("contacto", r"\b\d{2,4}[\s-]?\d{3,4}[\s-]?\d{3,4}\b|\bwhatsapp\b|@[\w.]+\.(?:com|ar)\b"),
+    ("cobertura_geografica", rf"\b(?:env[ií]os? a|cobertura|a todo el pa[ií]s){_COLA}"),
 ]
+
+
+MESES = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+         "agosto", "septiembre", "setiembre", "octubre", "noviembre", "diciembre")
+
+
+def _canonico(valor: str) -> str:
+    """Forma comparable de un texto: sin tildes, sin signos, números pegados."""
+    t = normalizar(valor)
+    t = re.sub(r"(?<=\d)[.\s](?=\d)", "", t)   # 1.500.000 y 1 500 000 → 1500000
+    t = re.sub(r"[^\w%/]+", " ", t)
+    return " ".join(t.split())
+
+
+def _numeros(texto: str) -> set[str]:
+    """Los números de un texto, sin separadores de miles."""
+    return set(re.findall(r"\d+(?:,\d+)?", _canonico(texto)))
+
+
+def _tiene_origen(valor: str, fuente_canon: str, fuente_nums: set[str]) -> bool:
+    """¿Este dato sale de alguna fuente del plan?
+
+    Se compara el **dato**, no cómo se lo escribió. `$1.500.000`,
+    `1.500.000 pesos` y `1 500 000` son el mismo precio, y antes los tres se
+    reportaban como inventados si la fuente usaba otra grafía.
+
+    Los números tienen que estar todos. Y si el dato nombra un mes, ese mes
+    también: sin esa condición, «hasta el 5 de enero» quedaba validado por
+    cualquier fuente que tuviera un 5 en alguna parte — y el caso real es
+    peor, porque el marcador «hasta el» estaba siempre y alcanzaba solo.
+    """
+    if not fuente_canon:
+        return False
+    nums = _numeros(valor)
+    canon = _canonico(valor)
+    meses = [m for m in MESES if m in canon]
+    if meses and not any(m in fuente_canon for m in meses):
+        return False
+    if nums:
+        return nums <= fuente_nums
+    # Un marcador sin número (una cobertura, un «whatsapp») se compara entero.
+    return canon in fuente_canon
 
 
 def dato_sin_validar(texto: str, m: dict, fuentes: list[str] | None = None) -> dict:
@@ -197,13 +249,15 @@ def dato_sin_validar(texto: str, m: dict, fuentes: list[str] | None = None) -> d
     las cifras históricas del brief son contexto, no permiso — así que la
     advertencia viaja siempre, incluso cuando el dato tiene origen.
     """
-    fuente_norm = normalizar(" \n ".join(fuentes or []))
+    fuente_bruta = " \n ".join(fuentes or [])
+    fuente_canon = _canonico(fuente_bruta)
+    fuente_nums = _numeros(fuente_bruta)
     hallazgos, sin_origen = [], []
 
     for categoria, patron in PATRONES_DATO:
         for m_re in re.finditer(patron, texto, re.I):
             valor = m_re.group(0).strip()
-            tiene_origen = bool(fuente_norm) and normalizar(valor) in fuente_norm
+            tiene_origen = _tiene_origen(valor, fuente_canon, fuente_nums)
             item = {
                 "categoria": categoria,
                 "valor": valor,
@@ -213,6 +267,31 @@ def dato_sin_validar(texto: str, m: dict, fuentes: list[str] | None = None) -> d
             hallazgos.append(item)
             if not tiene_origen:
                 sin_origen.append(item)
+
+    if hallazgos and not fuente_canon:
+        # Frenar es lo correcto, pero el motivo no es que el copy inventó
+        # nada: es que nadie pasó con qué comparar. Acusar de invención sin
+        # haber mirado una fuente manda a reescribir un copy que podía estar
+        # bien, y la segunda redacción es peor que la primera.
+        return _r(
+            "dato_sin_validar",
+            BLOQUEO,
+            hallazgos,
+            {
+                "tipo": "sin_fuentes",
+                "datos": hallazgos,
+                "por_que": (
+                    f"El copy trae {len(hallazgos)} dato(s) duro(s) y no se pasó "
+                    "ninguna fuente, así que no hay cómo distinguir un dato del "
+                    "brief de uno inventado."
+                ),
+                "accion": (
+                    "Volver a llamar pasando `fuentes`: el guión, el brief o la "
+                    "ficha de donde salió cada cifra. Si de verdad no hay fuente, "
+                    "el dato hay que pedirlo antes de escribirlo."
+                ),
+            },
+        )
 
     if sin_origen:
         return _r(

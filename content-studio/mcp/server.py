@@ -245,11 +245,14 @@ def _gate(args: dict) -> dict:
         "marca": {"type": "string"},
         "copy": {"type": "string", "description": "El texto completo: hook, desarrollo, copy y CTA."},
         "fuentes": {"type": "array", "items": {"type": "string"},
-                    "description": "Textos de origen (guión, brief, ficha) donde puede estar cada dato duro."},
+                    "description": "Textos de origen (guión, brief, ficha) donde puede estar cada dato duro. "
+                                   "Pasalo SIEMPRE que el copy tenga un precio, un plazo, una fecha o un "
+                                   "teléfono: sin fuentes no hay con qué distinguir un dato del brief de uno "
+                                   "inventado, y el gate frena. Lista vacía si de verdad no hay fuente."},
         "origen_voz": {"type": "string",
                        "description": "Si el copy se derivó de otra marca, su slug. Dispara el gate de contaminación de voz."},
         "pack": {"type": "string"},
-    }, "required": ["marca", "copy"]},
+    }, "required": ["marca", "copy", "fuentes"]},
     title="Revisar copy",
     readOnlyHint=True,
 )
@@ -355,9 +358,10 @@ def _matriz(args: dict) -> dict:
         "pieza_id": {"type": "string", "description": "Id existente. Omitilo para staging. Nunca lo inventes."},
         "assets": {"type": "array", "description": "Manifiestos de los assets generados.",
                    "items": {"type": "object"}},
-        "fuentes": {"type": "array", "items": {"type": "string"}},
+        "fuentes": {"type": "array", "items": {"type": "string"},
+                    "description": "Las mismas que usás en studio_revisar: sin ellas el gate de dato frena."},
         "pack": {"type": "string"},
-    }, "required": ["marca", "copy"]},
+    }, "required": ["marca", "copy", "fuentes"]},
     title="Armar paquete",
 )
 def _paquete(args: dict) -> dict:
@@ -455,8 +459,31 @@ def _applet_spec(args: dict) -> dict:
             "Abrir labs.google/fx/tools/flow y pedirle al agente que construya la herramienta.",
             "Pegar la especificación tal cual.",
             "Cuando termine, correr studio_applet_descubrir para cablear el appletId.",
+            "Y después studio_applet_verificar: el agente de Flow recorta bloques "
+            "al copiarlos y reporta el cambio como hecho. No alcanza con que diga "
+            "que los puso.",
         ],
     }
+
+
+@tool(
+    "studio_applet_verificar",
+    "Baja el código de una applet ya construida y comprueba que cada cláusula "
+    "que se le pidió esté adentro. Corrélo después de crear o editar una "
+    "applet en Flow, SIEMPRE: el agente de Flow recorta bloques al copiarlos y "
+    "reporta el cambio como hecho, y el resultado no delata la pérdida — las "
+    "imágenes salen bien igual hasta que una no. Sólo lee: no gasta créditos.",
+    {"properties": {
+        "applet_id": {"type": "string", "description": "El appletId, como lo devuelve studio_applet_descubrir."},
+        "clausulas": {"type": "array", "items": {"type": "string"},
+                      "description": "Frases que tienen que estar en el código. "
+                                     "Las prohibiciones del prompt son las que más importan."},
+    }, "required": ["applet_id", "clausulas"]},
+    title="Verificar applet",
+    readOnlyHint=True,
+)
+def _applet_verificar(args: dict) -> dict:
+    return applets.verificar(args["applet_id"], args["clausulas"])
 
 
 @tool(

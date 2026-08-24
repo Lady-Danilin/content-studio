@@ -265,7 +265,15 @@ def api(method: str, path: str, *, params: dict | None = None,
 
 def creditos() -> dict:
     """Saldo de la cuenta. Los créditos son de quien instala, no del agente:
-    se miden y se informan, no se deciden por él."""
+    se miden y se informan, no se deciden por él.
+
+    **No es un presupuesto de imagen.** Medido: corridas que generaron
+    decenas de imágenes informaron costo total 0, con los archivos en disco.
+    El contador no acompaña la generación de imagen, así que leer este saldo
+    como "lo que me va a costar esta tanda" da un número que no significa
+    eso. Sirve para lo que sí descuenta —video, sobre todo— y para saber que
+    la cuenta está viva.
+    """
     return api("GET", "credits")
 
 
