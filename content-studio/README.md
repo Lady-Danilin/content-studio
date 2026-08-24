@@ -14,6 +14,7 @@ El plugin. Once herramientas MCP, diez gates, un armador de paquetes.
 | `studio_revisar` | Un copy contra todos los gates de texto |
 | `studio_formato` | Aspecto, medio y duración por destino |
 | `studio_paquete` | Arma la carpeta entregable |
+| `studio_check` | Verifica que lo entregado se pueda medir y tenga procedencia |
 | `studio_importar` | Trae un plan externo a un pack |
 | `studio_applet_spec` | Redacta el pedido de una applet de Flow |
 | `studio_applet_descubrir` | Cablea los `appletId` en el pack |
@@ -36,9 +37,11 @@ content-studio/
 │   ├── manifiesto.py            procedencia y no-atribución
 │   ├── paquete.py               armado del entregable
 │   ├── importar.py              plan externo → pack
+│   ├── inventario.py            medición real y verificación
 │   ├── labs.py                  cliente de labs.google (stdlib)
 │   └── applets.py               applets de Flow
 ├── mcp/server.py
+├── tests/test_importar.py       pruebas del parser de TypeScript
 ├── hooks/                       precondiciones al arrancar
 ├── skills/content-studio/       cómo se opera, y por qué
 ├── commands/                    /studio-setup, /studio-importar, …
@@ -58,7 +61,18 @@ printf '%s\n' \
   | python3 content-studio/mcp/server.py
 
 STUDIO_PACK_NAME=_ejemplo python3 content-studio/doctor.py
+python3 content-studio/tests/test_importar.py
 ```
+
+## work/ y assets/
+
+Un archivo se gana entrar a `assets/` **por estar medido**, no por haber
+sido generado. `work/` es el proceso y se puede tirar; `assets/` es lo que
+el cliente recibe.
+
+`studio_check` mide con la stdlib —encabezados PNG, JPEG, GIF y WebP para
+las dimensiones— y con `ffprobe` para audio y video si está instalado. Lo
+que no se puede medir se marca como no medible, en vez de darse por bueno.
 
 ## Estado de la creación de applets
 

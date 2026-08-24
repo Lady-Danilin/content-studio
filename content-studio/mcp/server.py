@@ -28,6 +28,7 @@ import applets  # noqa: E402
 import formatos  # noqa: E402
 import gates  # noqa: E402
 import importar  # noqa: E402
+import inventario  # noqa: E402
 import labs  # noqa: E402
 import paquete  # noqa: E402
 import plan  # noqa: E402
@@ -313,6 +314,28 @@ def _paquete(args: dict) -> dict:
         **paquete.armar(m, copy=args["copy"], pieza_id=pieza_id,
                         manifiestos=args.get("assets"), veredicto=veredicto),
     }
+
+
+@tool(
+    "studio_check",
+    "Verifica un paquete ya armado: que cada asset se pueda medir de verdad, "
+    "que el manifiesto y el disco coincidan, y que ningún archivo esté sin "
+    "procedencia. Un asset cuenta como entregado sólo cuando pasó las tres. "
+    "Corrélo antes de dar una pieza por terminada — un PNG de 0 bytes y uno "
+    "bueno se ven igual en un listado de archivos.",
+    {"properties": {
+        "carpeta": {"type": "string", "description": "Carpeta del paquete."},
+        "escribir_inventario": {"type": "boolean", "description": "Dejar inventario.json. Por defecto no."},
+    }, "required": ["carpeta"]},
+    title="Verificar paquete",
+    readOnlyHint=True,
+    openWorldHint=False,
+)
+def _check(args: dict) -> dict:
+    r = inventario.verificar(args["carpeta"])
+    if args.get("escribir_inventario"):
+        r["inventario"] = str(inventario.escribir(args["carpeta"]))
+    return r
 
 
 # -------------------------------------------------------------------- packs

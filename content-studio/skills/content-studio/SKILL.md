@@ -111,6 +111,19 @@ que incluye un campo de no-atribución: a qué lugar, obra, caso o persona
 ese plano NO puede atribuirse. Es lo que impide que un recurso genérico se
 rotule después como algo real, cuando quien monta ya no es quien generó.
 
+## Antes de dar una pieza por terminada
+
+```
+studio_check <carpeta del paquete>
+```
+
+Falla por tres cosas, todas reales: archivos que no se pueden medir (un PNG
+de 0 bytes, un video truncado), manifiesto y disco desincronizados, y assets
+sin procedencia. Un asset cuenta como entregado sólo cuando pasa las tres.
+
+No alcanza con que el archivo exista. Un PNG de 0 bytes y uno bueno se ven
+igual en un listado, y el que se publica es el que nadie miró.
+
 ## Applets de Flow
 
 `studio_applet_spec` redacta el pedido de una applet desde un preset del

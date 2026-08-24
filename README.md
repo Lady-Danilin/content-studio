@@ -66,11 +66,22 @@ studio-out/<marca>/<id-de-pieza>/
 ├── copy.md            el texto, listo para revisar
 ├── manifiesto.json    procedencia de cada asset y su no-atribución
 ├── pendientes.md      qué falta validar, con quién y por qué
-└── assets/
+├── work/              el proceso: intermedios, descartes, versiones
+└── assets/            lo que se entrega
 ```
 
 `pendientes.md` es lo que hace útil al resto: un paquete sin él se lee como
 aprobado.
+
+`work/` y `assets/` no son lo mismo, y confundirlos es el error caro.
+`work/` se puede tirar. Un archivo se gana entrar a `assets/` **por estar
+medido**, no por haber sido generado: un PNG de 0 bytes y uno bueno se ven
+igual en un listado de archivos.
+
+`studio_check` mide de verdad —dimensiones por encabezado, duración por
+`ffprobe`— y falla por tres cosas: archivos no medibles, manifiesto y disco
+desincronizados, y assets sin procedencia. Un asset cuenta como entregado
+sólo cuando pasa las tres.
 
 El **manifiesto** lleva un campo de no-atribución que nombra a qué lugar,
 obra, caso o persona ese plano no puede atribuirse. Es lo que impide que un

@@ -9,7 +9,13 @@ de qué quedó pendiente y con quién se valida.
     ├── copy.md            el texto, listo para revisar
     ├── manifiesto.json    procedencia de cada asset y su no-atribución
     ├── pendientes.md      qué falta validar, con quién y por qué
-    └── assets/            lo generado
+    ├── work/              el proceso: intermedios, descartes, versiones
+    └── assets/            lo que se entrega
+
+`work/` y `assets/` no son lo mismo, y confundirlos es el error caro.
+`work/` se puede tirar. Un archivo se gana entrar a `assets/` **por estar
+medido**, no por haber sido generado: un PNG de 0 bytes y uno bueno se ven
+igual en un listado. `inventario.verificar()` es quien lo decide.
 
 `pendientes.md` es el archivo que hace útil al resto. Un paquete sin él se
 lee como aprobado.
@@ -21,6 +27,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import gates
+import inventario
 import manifiesto as mf
 import plan
 import studio
@@ -55,6 +62,7 @@ def armar(
     """
     carpeta = destino(m, pieza_id)
     (carpeta / "assets").mkdir(parents=True, exist_ok=True)
+    (carpeta / "work").mkdir(parents=True, exist_ok=True)
 
     incompleta = any(
         a.get("gate") == "identidad_visual" for a in (veredicto or {}).get("avisos", [])
@@ -79,7 +87,8 @@ def armar(
         "incompleta": incompleta,
         "assets": len(manifiestos or []),
         "pendientes": len((veredicto or {}).get("avisos", [])),
-        "archivos": ["copy.md", "manifiesto.json", "pendientes.md", "assets/"],
+        "archivos": ["copy.md", "manifiesto.json", "pendientes.md", "work/", "assets/"],
+        "verificacion": inventario.verificar(carpeta),
     }
 
 

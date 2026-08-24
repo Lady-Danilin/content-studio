@@ -221,12 +221,62 @@ def _objeto_literal(texto: str) -> str | None:
 
 
 def _ts_a_json(cuerpo: str) -> str:
-    s = re.sub(r"//[^\n]*", "", cuerpo)
-    s = re.sub(r"/\*.*?\*/", "", s, flags=re.S)
+    """Convierte un literal de objeto TypeScript a JSON.
+
+    Recorre carácter por carácter en vez de aplicar expresiones regulares
+    sobre todo el texto. La diferencia importa: un guión real trae comillas
+    dobles adentro de un string con comillas simples —«"[Nombre] vino desde
+    [localidad]." — plano del cliente»— y cualquier regex que reemplace
+    comillas globalmente rompe justo ahí.
+
+    Reconoce las tres formas de string de TS (simples, dobles, backticks),
+    salta comentarios, y sólo entonces normaliza las claves sin comillas y
+    las comas finales.
+    """
+    salida: list[str] = []
+    i, n = 0, len(cuerpo)
+
+    while i < n:
+        c = cuerpo[i]
+
+        # comentarios
+        if c == "/" and i + 1 < n and cuerpo[i + 1] == "/":
+            i = cuerpo.find("\n", i)
+            if i == -1:
+                break
+            continue
+        if c == "/" and i + 1 < n and cuerpo[i + 1] == "*":
+            fin = cuerpo.find("*/", i + 2)
+            i = n if fin == -1 else fin + 2
+            continue
+
+        # strings: se re-emiten siempre como JSON, con lo de adentro escapado
+        if c in "'\"`":
+            cierre, j, partes = c, i + 1, []
+            while j < n:
+                if cuerpo[j] == "\\" and j + 1 < n:
+                    sig = cuerpo[j + 1]
+                    # \' es válido en TS pero no en JSON
+                    partes.append(sig if sig == "'" else cuerpo[j:j + 2])
+                    j += 2
+                    continue
+                if cuerpo[j] == cierre:
+                    break
+                partes.append(cuerpo[j])
+                j += 1
+            salida.append(json.dumps("".join(partes), ensure_ascii=False))
+            i = j + 1
+            continue
+
+        salida.append(c)
+        i += 1
+
+    s = "".join(salida)
     s = re.sub(r"\bas const\b", "", s)
-    s = re.sub(r"(?m)^(\s*)([A-Za-z_]\w*)\s*:", r'\1"\2":', s)   # claves sin comillas
-    s = re.sub(r",(\s*[}\]])", r"\1", s)                          # comas finales
-    s = s.replace("“", '"').replace("”", '"')
+    # claves sin comillas: sólo las que siguen a { o , (no dentro de un string,
+    # que a esta altura ya está normalizado y no contiene esa forma cruda)
+    s = re.sub(r"([{,]\s*)([A-Za-z_$][\w$]*)\s*:", r'\1"\2":', s)
+    s = re.sub(r",(\s*[}\]])", r"\1", s)          # comas finales
     return s
 
 
