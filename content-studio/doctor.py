@@ -37,6 +37,7 @@ def main() -> int:
     print()
     sys.path.insert(0, str(AQUI / "lib"))
     try:
+        import gates
         import labs
         import plan
         import studio
@@ -61,6 +62,11 @@ def main() -> int:
         check("pack activo", True,
               detalle=f"{pack.get('nombre')}: {cob['marcas']} marcas, "
                       f"{cob['piezas_totales']} piezas con id")
+        idi = gates.idioma(pack)
+        check("idioma de los gates", idi["estado"] == gates.OK,
+              detalle=f"patrones en {gates.IDIOMA_PATRONES!r}",
+              arreglo=idi.get("entregable", {}).get("accion", ""),
+              aviso=True)
         if cob["marcas_sin_calendario"]:
             check("calendarios", False, aviso=True,
                   detalle=f"{len(cob['marcas_sin_calendario'])} marcas sin calendario",

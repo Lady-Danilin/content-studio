@@ -89,7 +89,11 @@ def _marca(args: dict) -> tuple[dict, dict]:
 def _estado(args: dict) -> dict:
     salida: dict[str, Any] = {"packs_instalados": studio.packs_disponibles()}
     try:
-        salida["cobertura"] = plan.cobertura(studio.cargar_pack(args.get("pack")))
+        pack = studio.cargar_pack(args.get("pack"))
+        salida["cobertura"] = plan.cobertura(pack)
+        idi = gates.idioma(pack)
+        if idi["estado"] != gates.OK:
+            salida["idioma"] = idi
     except PackError as e:
         salida["pack"] = None
         salida["problema"] = str(e)

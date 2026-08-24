@@ -34,6 +34,48 @@ from studio import normalizar
 
 OK, AVISO, BLOQUEO = "ok", "aviso", "bloqueo"
 
+# Idioma de los patrones de este módulo. No es un detalle de traducción: los
+# gates de dato duro, verbo de resultado e indicio probatorio son
+# expresiones regulares sobre texto en español. Con contenido en otro
+# idioma no fallan — devuelven OK, que es peor. Medido: «The treatment
+# eliminates the pain» pasa como aviso donde su equivalente en español
+# bloquea.
+#
+# Mientras haya un solo juego de patrones, lo honesto es declararlo y
+# avisar, en vez de aparentar que el core es neutral.
+IDIOMA_PATRONES = "es"
+
+
+def idioma(pack: dict | None) -> dict:
+    """¿Los patrones sirven para el idioma que declara el pack?
+
+    Un pack sin `idioma` se asume en el idioma de los patrones: es lo que
+    venía pasando antes de que este campo existiera, y romper esos packs
+    sería peor que el problema.
+    """
+    declarado = ((pack or {}).get("idioma") or IDIOMA_PATRONES).lower()[:2]
+    if declarado == IDIOMA_PATRONES:
+        return _r("idioma", OK, [])
+    return _r(
+        "idioma",
+        AVISO,
+        [{"pack": declarado, "patrones": IDIOMA_PATRONES}],
+        {
+            "tipo": "gates_sin_patrones",
+            "advertencia": (
+                f"El pack declara contenido en {declarado!r} y los patrones de "
+                f"los gates están en {IDIOMA_PATRONES!r}. Los gates de dato "
+                "duro, sector regulado e indicio probatorio van a dejar pasar "
+                "cosas SIN avisar."
+            ),
+            "afectados": ["dato_sin_validar", "sector_regulado", "probatorio"],
+            "accion": (
+                "Revisar el copy a mano, o traducir PATRONES_DATO, "
+                "VERBOS_RESULTADO e INDICIOS_PROBATORIOS en lib/gates.py."
+            ),
+        },
+    )
+
 # Funciones del asset. La distinción es la frontera entre publicidad e
 # información engañosa, y no tiene nada de específico de una agencia.
 PRUEBA = "prueba"      # afirma que algo existe, ocurrió, avanzó o es quien dice

@@ -130,6 +130,38 @@ Este repositorio es público y no incluye ningún pack real. El único que
 viaja es [`_ejemplo`](./content-studio/packs/_ejemplo), con dos marcas
 inventadas — elegidas para que se disparen los gates que importan.
 
+## Qué tan genérico es
+
+El core no trae ninguna marca, ningún cliente ni ninguna agencia adentro, y
+eso está verificado: `lib/`, `mcp/`, `hooks/`, `commands/` y `skills/` no
+mencionan un solo cliente real. Tampoco impone una taxonomía de contenido —
+`atrae/demuestra/convierte` aparece en la documentación, no en una
+validación. Cualquier agencia puede instalarlo y armar su pack.
+
+Pero conviene saber en qué **no** es neutral, porque los supuestos que no se
+declaran se descubren tarde:
+
+| Eje | Estado |
+|---|---|
+| Agencia y clientes | **agnóstico** — todo vive en el pack |
+| Taxonomía de funciones | **agnóstico** — no hay enum cerrado |
+| Formato de id de pieza | configurable con `convenciones.re_id_pieza` |
+| Techo del prompt | configurable con `convenciones.techo_prompt` |
+| **Idioma** | **español**, y afecta a tres gates |
+| **Plataformas** | redes sociales: reel, historia, feed, carrusel, placa, ads, YouTube, LinkedIn. No hay email, print ni web |
+
+El idioma es el que más importa. Los gates de `dato_sin_validar`,
+`sector_regulado` y `probatorio` son expresiones regulares sobre texto en
+español. Con contenido en otro idioma **no fallan: devuelven OK**, que es
+peor. Medido: «The treatment eliminates the pain» pasa como aviso donde su
+equivalente en español bloquea — una promesa clínica que se escapa.
+
+Mientras haya un solo juego de patrones, lo honesto es declararlo y avisar.
+Un pack puede poner `"idioma": "en"` y el plugin lo dice al arrancar, en
+`studio_estado`, en el doctor y en cada `studio_revisar`. Traducir
+`PATRONES_DATO`, `VERBOS_RESULTADO` e `INDICIOS_PROBATORIOS` en
+`lib/gates.py` es lo que hace falta para soportar otro idioma de verdad.
+
 ## Requisitos
 
 `python3` y nada más. El servidor MCP habla JSON-RPC sobre stdio usando sólo

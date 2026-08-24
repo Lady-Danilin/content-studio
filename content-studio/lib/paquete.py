@@ -159,6 +159,7 @@ def revisar(m: dict, copy: str, *, fuentes: list[str] | None = None,
     agregación sí: un solo bloqueo frena, los avisos viajan al manifiesto.
     """
     resultados = [
+        gates.idioma(pack),
         gates.blocklist(copy, m),
         gates.sector_regulado(copy, m),
         gates.dato_sin_validar(copy, m, fuentes),

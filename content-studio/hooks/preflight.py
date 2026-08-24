@@ -31,6 +31,7 @@ def emitir(contexto: str) -> None:
 def main() -> int:
     # Ninguna falla de un plugin puede romper el arranque de la sesión.
     try:
+        import gates
         import plan
         import studio
     except Exception:
@@ -47,6 +48,11 @@ def main() -> int:
         return 0
 
     avisos = []
+
+    idi = gates.idioma(pack)
+    if idi["estado"] != gates.OK:
+        avisos.append(idi["entregable"]["advertencia"])
+
     sin_cal = cob.get("marcas_sin_calendario") or []
     if sin_cal:
         avisos.append(

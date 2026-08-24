@@ -45,24 +45,31 @@ PROHIBICIONES_BASE = [
 # la situación primero, y después la dirección visual del preset. Es la
 # pérdida barata, y es a propósito. Aun así se mide, porque una pieza que
 # perdió su dirección visual sale genérica sin que nada lo diga.
+# Es el de Google Labs Flow. Otro generador tiene el suyo, y un pack puede
+# fijarlo en `convenciones.techo_prompt`; medir contra el techo equivocado
+# es casi tan inútil como no medir.
 TECHO_PROMPT = 2126
 MARGEN_AVISO = 150
 
 
-def medir_prompt(prompt: str) -> dict:
+def techo(pack: dict | None = None) -> int:
+    return int(((pack or {}).get("convenciones") or {}).get("techo_prompt") or TECHO_PROMPT)
+
+
+def medir_prompt(prompt: str, pack: dict | None = None) -> dict:
     """Cuánto mide lo que se va a enviar, contra el techo.
 
     Medir es la única defensa contra un recorte que no avisa. Es barato y no
     depende de mirar un contador en pantalla.
     """
-    largo = len(prompt)
+    largo, tope = len(prompt), techo(pack)
     return {
         "largo": largo,
-        "techo": TECHO_PROMPT,
-        "margen": TECHO_PROMPT - largo,
-        "se_trunca": largo > TECHO_PROMPT,
-        "sobra": max(0, largo - TECHO_PROMPT),
-        "al_limite": TECHO_PROMPT - MARGEN_AVISO <= largo <= TECHO_PROMPT,
+        "techo": tope,
+        "margen": tope - largo,
+        "se_trunca": largo > tope,
+        "sobra": max(0, largo - tope),
+        "al_limite": tope - MARGEN_AVISO <= largo <= tope,
     }
 
 
@@ -72,6 +79,7 @@ def borrador(
     *,
     destino: str | None = None,
     situacion: str | None = None,
+    pack: dict | None = None,
 ) -> dict:
     """Campos de generación para una marca y un preset.
 
@@ -93,7 +101,7 @@ def borrador(
         partes.append(situacion.strip())
 
     prompt = ". ".join(p for p in partes if p)
-    largo = medir_prompt(prompt)
+    largo = medir_prompt(prompt, pack)
 
     campos: dict[str, Any] = {
         "marca": m["slug"],
@@ -118,8 +126,8 @@ def borrador(
         pendientes.append({
             "campo": "prompt",
             "detalle": (
-                f"El prompt mide {largo['largo']} caracteres y el techo de Flow "
-                f"es {TECHO_PROMPT}: se van a perder {largo['sobra']} del final."
+                f"El prompt mide {largo['largo']} caracteres y el techo del "
+                f"servicio es {largo['techo']}: se pierden {largo['sobra']} del final."
             ),
             "consecuencia": (
                 "Las prohibiciones van adelante y sobreviven al recorte, así "
