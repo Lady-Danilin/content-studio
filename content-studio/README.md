@@ -13,6 +13,8 @@ El plugin. Once herramientas MCP, diez gates, un armador de paquetes.
 | `studio_gate` | ¿Este asset se puede generar? Corre antes de gastar un crédito |
 | `studio_revisar` | Un copy contra todos los gates de texto |
 | `studio_formato` | Aspecto, medio y duración por destino |
+| `studio_campos` | Ficha de la marca → campos de generación (borrador) |
+| `studio_matriz` | Expande un lote y dice cuántas variantes son, antes de generar |
 | `studio_paquete` | Arma la carpeta entregable |
 | `studio_check` | Verifica que lo entregado se pueda medir y tenga procedencia |
 | `studio_importar` | Trae un plan externo a un pack |
@@ -38,6 +40,7 @@ content-studio/
 │   ├── paquete.py               armado del entregable
 │   ├── importar.py              plan externo → pack
 │   ├── inventario.py            medición real y verificación
+│   ├── campos.py                ficha de la marca → campos de generación
 │   ├── labs.py                  cliente de labs.google (stdlib)
 │   └── applets.py               applets de Flow
 ├── mcp/server.py

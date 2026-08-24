@@ -11,10 +11,24 @@ lo lee antes de montar, y el responsable de cuenta antes de aprobar.
 
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 
 import studio
+
+
+def sha256(ruta: str | Path) -> str | None:
+    """Huella del archivo. Es lo que permite decir después «este es el
+    mismo asset que se aprobó», cuando el nombre ya no alcanza."""
+    p = Path(ruta)
+    if not p.is_file():
+        return None
+    h = hashlib.sha256()
+    with p.open("rb") as f:
+        for bloque in iter(lambda: f.read(65536), b""):
+            h.update(bloque)
+    return h.hexdigest()
 
 
 def nuevo(
@@ -29,6 +43,8 @@ def nuevo(
     preset: str | None = None,
     avisos: list | None = None,
     incompleta: bool = False,
+    ruta: str | Path | None = None,
+    costo: float | None = None,
 ) -> dict:
     """Manifiesto de un asset generado.
 
@@ -43,6 +59,8 @@ def nuevo(
         )
     return {
         "archivo": archivo,
+        "sha256": sha256(ruta) if ruta else None,
+        "costo": costo,
         "generado": True,
         "sin_texto": True,
         "marca": marca,

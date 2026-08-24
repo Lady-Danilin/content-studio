@@ -102,9 +102,24 @@ reglas — dryrun antes de un lote, sin paralelizar, sin bajar las pausas.
 
 ```
 studio_gate       ¿se puede? ¿con qué aspecto?
+studio_campos     el prompt sale de la ficha, no de la improvisación
+studio_matriz     si es un lote: cuántas variantes son, antes de lanzarlo
   → google-flow   flow_dryrun_recipe, después flow_batch_generate
 studio_paquete    copy + manifiesto + pendientes
+studio_check      ¿lo entregado se puede medir y tiene procedencia?
 ```
+
+**No escribas el prompt a mano.** `studio_campos` lo arma desde la ficha de
+la marca y le mete adentro las prohibiciones base, así el prompt no se
+reinventa en cada pieza. Lo que devuelve es un **borrador**: la ficha manda,
+y si un campo la contradice el error está en la traducción, no en la ficha.
+Cada campo viene con su origen justamente para poder repasarlo sin abrir la
+ficha al lado.
+
+**Antes de un lote, mirá el número.** `studio_matriz` dice cuántas variantes
+salen del producto cartesiano. Tres es una prueba; veintiocho es una tarde
+de créditos de otra persona. Probá con dos o tres: un lote que falla en la
+variante 14 de 28 ya gastó las trece anteriores.
 
 Cada asset generado entra al paquete con su **manifiesto de procedencia**,
 que incluye un campo de no-atribución: a qué lugar, obra, caso o persona
@@ -123,6 +138,12 @@ sin procedencia. Un asset cuenta como entregado sólo cuando pasa las tres.
 
 No alcanza con que el archivo exista. Un PNG de 0 bytes y uno bueno se ven
 igual en un listado, y el que se publica es el que nadie miró.
+
+`studio_check` verifica lo **técnico**: que el archivo se pueda medir, que
+el manifiesto y el disco coincidan, que nada esté sin procedencia. Lo
+**semántico** —¿esta placa es de esta marca?, ¿esta toma dice lo que el
+guión pedía?— no lo puede medir un programa, y no conviene fingir que sí.
+Eso lo mira una persona con los `pendientes.md` al lado.
 
 ## Applets de Flow
 

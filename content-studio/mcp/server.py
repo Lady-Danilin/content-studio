@@ -25,6 +25,7 @@ from typing import Any, Callable
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 
 import applets  # noqa: E402
+import campos  # noqa: E402
 import formatos  # noqa: E402
 import gates  # noqa: E402
 import importar  # noqa: E402
@@ -280,6 +281,65 @@ def _formato(args: dict) -> dict:
     return formatos.validar(args["destino"], args.get("aspecto"), args.get("duracion_s"))
 
 
+def _preset(pack: dict, nombre: str) -> dict:
+    presets = pack.get("presets") or {}
+    if nombre not in presets:
+        raise StudioError(
+            f"El preset {nombre!r} no está en el pack. "
+            f"Disponibles: {', '.join(sorted(presets)) or 'ninguno'}."
+        )
+    return presets[nombre]
+
+
+@tool(
+    "studio_campos",
+    "Traduce la ficha de una marca a los campos concretos de generación de un "
+    "preset: prompt armado, aspecto según destino, y las prohibiciones base ya "
+    "escritas adentro del prompt. Usalo ANTES de escribir un prompt a mano — "
+    "así el prompt sale de la ficha y no se improvisa en cada pieza. Devuelve "
+    "un BORRADOR: la ficha manda, y si algún campo la contradice el error está "
+    "en la traducción. Cada campo viene con su origen y con lo que le falta.",
+    {"properties": {
+        "marca": {"type": "string"},
+        "preset": {"type": "string", "description": "Nombre del preset en el pack."},
+        "destino": {"type": "string", "description": "reel, feed, carrusel, placa… fija el aspecto."},
+        "situacion": {"type": "string", "description": "Lo que cambia entre una pieza y otra."},
+        "pack": {"type": "string"},
+    }, "required": ["marca", "preset"]},
+    title="Ficha a campos",
+    readOnlyHint=True,
+    openWorldHint=False,
+)
+def _campos(args: dict) -> dict:
+    m, pack = _marca(args)
+    return campos.borrador(
+        m, _preset(pack, args["preset"]),
+        destino=args.get("destino"), situacion=args.get("situacion"),
+    )
+
+
+@tool(
+    "studio_matriz",
+    "Expande un lote como producto cartesiano de ejes (momento, encuadre, "
+    "formato…) para producir una semana o un mes de una vez. Devuelve la cuenta "
+    "de variantes ANTES de generar: un lote de tres es una prueba, uno de "
+    "veintiocho es una tarde de créditos de otra persona. Probá siempre con dos "
+    "o tres antes del lote entero.",
+    {"properties": {
+        "marca": {"type": "string"},
+        "preset": {"type": "string"},
+        "ejes": {"type": "object", "description": 'Ejes a combinar, p. ej. {"Momento":["mañana","tarde"]}'},
+        "pack": {"type": "string"},
+    }, "required": ["marca", "preset", "ejes"]},
+    title="Matriz de lote",
+    readOnlyHint=True,
+    openWorldHint=False,
+)
+def _matriz(args: dict) -> dict:
+    m, pack = _marca(args)
+    return campos.matriz(m, _preset(pack, args["preset"]), args["ejes"])
+
+
 # ---------------------------------------------------------------- entregable
 
 
@@ -387,16 +447,10 @@ def _importar(args: dict) -> dict:
 )
 def _applet_spec(args: dict) -> dict:
     pack = studio.cargar_pack(args.get("pack"))
-    presets = pack.get("presets") or {}
     nombre = args["preset"]
-    if nombre not in presets:
-        raise StudioError(
-            f"El preset {nombre!r} no está en el pack. "
-            f"Disponibles: {', '.join(sorted(presets)) or 'ninguno'}."
-        )
     return {
         "preset": nombre,
-        "especificacion": applets.desde_preset(nombre, presets[nombre]),
+        "especificacion": applets.desde_preset(nombre, _preset(pack, nombre)),
         "como_usarla": [
             "Abrir labs.google/fx/tools/flow y pedirle al agente que construya la herramienta.",
             "Pegar la especificación tal cual.",
