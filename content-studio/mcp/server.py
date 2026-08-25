@@ -510,6 +510,53 @@ def _applet_descubrir(args: dict) -> dict:
     return applets.descubrir(esperadas)
 
 
+@tool(
+    "studio_applet_cambio",
+    "Redacta el pedido de una MODIFICACIÓN a una applet de Flow. El agente de "
+    "Flow borra bloques que no se le pidió tocar y reporta el cambio como "
+    "hecho, así que el pedido tiene que abrir con la lista de lo que debe "
+    "sobrevivir, en positivo y enumerada. Decirle qué NO tocar, en negativo, "
+    "no funciona: pidiéndole un cambio de interfaz con una lista de negativos "
+    "borró el contador y la validación enteros y lo llamó «simplificación». "
+    "Después del cambio, verificá con studio_applet_verificar.",
+    {"properties": {
+        "nombre": {"type": "string", "description": "La applet a modificar."},
+        "cambio": {"type": "string", "description": "Qué se quiere cambiar."},
+        "debe_sobrevivir": {"type": "array", "items": {"type": "string"},
+                            "description": "Lo que tiene que quedar intacto. Obligatorio."},
+    }, "required": ["nombre", "cambio", "debe_sobrevivir"]},
+    title="Pedido de cambio de applet",
+    readOnlyHint=True,
+    openWorldHint=False,
+)
+def _applet_cambio(args: dict) -> dict:
+    return {
+        "pedido": applets.pedido_de_cambio(
+            args["nombre"], args["cambio"], args["debe_sobrevivir"]
+        ),
+        "despues": "Correr studio_applet_verificar con las mismas cláusulas.",
+    }
+
+
+@tool(
+    "studio_applet_prompt",
+    "Devuelve el código con el que una applet arma su prompt, para poder "
+    "medir el texto REAL que se manda. Lo que se escribe en un control es un "
+    "fragmento: el prompt final lo arma la applet, y ése es el que Flow "
+    "recorta a ~2126 caracteres en silencio —la imagen vuelve, y vuelve bien. "
+    "Ejecutá la función constructora contra un caso fijo y medí lo que "
+    "devuelve. Re-descargalo después de cada edición: medir una copia vieja "
+    "no mide nada.",
+    {"properties": {
+        "applet_id": {"type": "string", "description": "Id de la applet."},
+    }, "required": ["applet_id"]},
+    title="Constructor de prompt",
+    readOnlyHint=True,
+)
+def _applet_prompt(args: dict) -> dict:
+    return applets.constructor_de_prompt(args["applet_id"])
+
+
 # ------------------------------------------------------------------ JSON-RPC
 # De acá para abajo es infraestructura: es igual para cualquier plugin.
 

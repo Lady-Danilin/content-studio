@@ -39,6 +39,7 @@ y `descubrir()` cablea sola el `appletId` en el pack.
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 import labs
@@ -46,6 +47,8 @@ import studio
 from studio import StudioError
 
 # Los nombres van al SDK tal cual, emoji y espaciado incluidos.
+TECHO_FLOW = 2126
+
 MODELOS = ["🍌 Nano Banana Pro", "🍌 Nano Banana 2", "🍌 Nano Banana 2 Lite"]
 
 
@@ -293,3 +296,98 @@ def conversacion(applet_id: str) -> list[dict]:
         for e in eventos
         if e.get("text")
     ]
+
+
+def pedido_de_cambio(nombre: str, cambio: str, debe_sobrevivir: list[str]) -> str:
+    """Cómo pedirle una modificación al agente de Flow sin que rompa el resto.
+
+    La lista va **en positivo y enumerada**, encabezando el pedido: «cuando
+    termines, estas cinco cosas siguen exactamente como están, y eso es parte
+    del pedido». Decir qué NO tocar, en negativo, no funciona — medido:
+    pidiéndole un cambio de interfaz con una lista de negativos, borró el
+    contador y la validación enteros y lo reportó como «simplificación de la
+    UI».
+
+    Después del cambio hay que verificar igual, con `verificar()`. El pedido
+    bien escrito baja la probabilidad de pérdida; no la elimina.
+    """
+    if not debe_sobrevivir:
+        raise ValueError(
+            "debe_sobrevivir no puede estar vacío: es la parte del pedido que "
+            "impide que el agente borre lo que no se le pidió tocar."
+        )
+    lista = "\n".join(f"{i}. {x}" for i, x in enumerate(debe_sobrevivir, 1))
+    return f"""\
+Cambio sobre **{nombre}**.
+
+Cuando termines, estas {len(debe_sobrevivir)} cosas siguen exactamente como
+están, y eso es parte del pedido:
+
+{lista}
+
+El cambio que sí quiero:
+
+{cambio}
+
+Al terminar, listá textualmente cada uno de los {len(debe_sobrevivir)} puntos
+de arriba tal como quedaron en el código.
+"""
+
+
+# Los applets de Flow arman el prompt en un módulo con este nombre. El resto
+# de los archivos son interfaz, y sus literales no viajan al modelo.
+_ARCHIVOS_PROMPT = ("promptbuilder.ts", "prompt.ts", "prompts.ts")
+
+
+def constructor_de_prompt(applet_id: str) -> dict:
+    """El código con el que la applet arma su prompt, para poder medirlo.
+
+    Se devuelve el código en vez de un número, y es a propósito. Lo que se
+    escribe en un control es un fragmento: el prompt final lo arma la applet
+    concatenando sus propios bloques, y **ese** es el que Flow recorta a
+    ~2126 caracteres en silencio. La imagen vuelve igual, y vuelve bien.
+
+    Estimar ese largo con expresiones regulares da un número que parece una
+    medición y no lo es —sumar todos los literales de una applet real da
+    decenas de miles de caracteres, entre CSS, mensajes de interfaz y JSX—,
+    y una medición que siempre grita se aprende a ignorar. Lo que sirve es
+    ejecutar la función constructora contra un caso fijo y medir el string
+    que devuelve: ese es el texto exacto que se envía, y averiguarlo no
+    cuesta nada.
+
+    **Volvé a bajarlo después de cada edición de la applet.** Medir una
+    copia vieja no mide nada.
+    """
+    d = labs.obtener_applet(applet_id)
+    archivos = d.get("codeFiles") or []
+
+    def nombre(f):
+        return (f.get("name") or f.get("path") or "")
+
+    constructores = [
+        f for f in archivos
+        if nombre(f).lower().rsplit("/", 1)[-1] in _ARCHIVOS_PROMPT
+    ]
+    if not constructores:
+        constructores = [f for f in archivos if "prompt" in nombre(f).lower()]
+
+    return {
+        "appletId": applet_id,
+        "archivos": [nombre(f) for f in archivos],
+        "constructores": [
+            {"archivo": nombre(f), "codigo": f.get("content", "")}
+            for f in constructores
+        ],
+        "como_medir": [
+            "Ejecutar la función que arma el prompt contra un caso fijo.",
+            "Medir el largo del string que devuelve, no el del control.",
+            f"Compararlo contra el techo del servicio ({TECHO_FLOW} en Flow).",
+            "Si no da para ejecutarlo: sumar a mano los bloques pedidos y "
+            "contrastarlos con el contador de la propia applet. Si no "
+            "coinciden, algo se cayó aunque la imagen se vea bien.",
+        ],
+        "advertencia": (
+            "Re-descargá el código después de cada edición de la applet: "
+            "medir una copia vieja no mide nada."
+        ),
+    }

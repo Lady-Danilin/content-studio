@@ -184,6 +184,39 @@ con los archivos en disco. El contador no acompaña la generación de imagen.
 Sirve para lo que sí descuenta —video— y para saber que la cuenta está viva.
 Leerlo como "lo que va a costar esta tanda" da un número que no significa eso.
 
+## Modificar una applet que ya existe
+
+El agente de Flow **borra bloques que no se le pidió tocar, y reporta el
+cambio como hecho.** Medido: pidiéndole un bloque de prohibiciones palabra
+por palabra, copió la primera oración y dejó afuera las cuatro cláusulas
+siguientes. Las imágenes de esa tanda salieron bien igual, porque el resto
+del prompt alcanzaba — la primera pieza que no alcance es la que lo paga.
+
+```
+studio_applet_cambio      el pedido, con lo que debe sobrevivir enumerado
+  → se pega en Flow
+studio_applet_verificar   se baja el código y se busca cada cláusula
+```
+
+El pedido abre con la lista de lo que tiene que quedar intacto, **en
+positivo y enumerada**. Decirle qué no tocar, en negativo, no funciona: con
+una lista de negativos borró el contador y la validación enteros y lo llamó
+«simplificación de la UI».
+
+Y nunca aceptes «listo» como evidencia. Verificar es una llamada y no cuesta
+créditos.
+
+## El prompt que se manda no es el que escribís
+
+Lo que va en un control es un fragmento. El prompt final lo arma la applet
+concatenando sus bloques, y **ése** es el que Flow recorta a ~2126
+caracteres, en silencio: la imagen vuelve, y vuelve bien.
+
+`studio_campos` mide lo que vos ponés, que es una cota inferior.
+`studio_applet_prompt` baja el código del constructor para medir el real —
+ejecutalo contra un caso fijo y medí el string que devuelve. Volvé a bajarlo
+después de cada edición: medir una copia vieja no mide nada.
+
 ## Referencias
 
 - `references/packs.md` — qué va en el core y qué en el pack, y cómo llenarlo
