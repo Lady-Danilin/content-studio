@@ -24,7 +24,17 @@ pedido, y el segundo intento es justo el que produce el asset falso.
 Verificá con:
 
 ```bash
-python3 content-studio/doctor.py
+python3 ~/.claude/plugins/marketplaces/content-studio/content-studio/doctor.py
+```
+
+El plugin queda instalado **sin ninguna cartera**: sin un pack no hay marcas,
+ni voz, ni calendario, y el doctor lo dice. El pack de tu agencia va a
+`~/.config/content-studio/packs/<nombre>/`, fuera de git —cómo armarlo está
+en [`packs/README.md`](./content-studio/packs/README.md)—. Para ver el plugin
+funcionando antes de tener el tuyo:
+
+```bash
+STUDIO_PACK_NAME=_ejemplo python3 ~/.claude/plugins/marketplaces/content-studio/content-studio/doctor.py
 ```
 
 Para generar imagen, video o música hace falta además el marketplace
