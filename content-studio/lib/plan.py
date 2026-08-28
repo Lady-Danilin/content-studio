@@ -95,6 +95,33 @@ def piezas(m: dict, anio: int | None = None, mes: int | None = None) -> list[dic
     return salida
 
 
+def historias(m: dict, anio: int | None = None, mes: int | None = None) -> list[dict]:
+    """Historias fechadas de una marca, opcionalmente filtradas por mes.
+
+    Espejo de `piezas`. Las historias son un canal propio del calendario:
+    tienen su propio id, con sufijo `-h`, y pueden caer en un día sin pieza.
+    """
+    salida: list[dict] = []
+    for mm in m.get("meses") or []:
+        if anio is not None and mm.get("anio") != anio:
+            continue
+        if mes is not None and mm.get("mes") != mes:
+            continue
+        for semana in mm.get("semanas") or []:
+            for h in semana.get("historias") or []:
+                salida.append(
+                    {
+                        **h,
+                        "marca": m["slug"],
+                        "anio": mm.get("anio"),
+                        "mes": mm.get("mes"),
+                        "semana": semana.get("numero"),
+                        "tema": semana.get("tema"),
+                    }
+                )
+    return salida
+
+
 def pieza(id_pieza: str, pack: dict | None = None) -> dict:
     """Busca una pieza por su id en toda la cartera.
 
